@@ -1,8 +1,19 @@
 const webpack = require('webpack');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CustomThemePlugin = require('./customThemePlugin');
 
 module.exports = {
+    devServer: {
+        historyApiFallback: {
+            rewrites: [
+                {from: /\./, to: '/'}
+            ]
+        }
+    },
+    optimization: {
+        minimize: false
+    },
     plugins: [
         new webpack.ProvidePlugin({
             'jQuery': 'jquery',
@@ -10,13 +21,13 @@ module.exports = {
             '$': 'jquery'
         }),
         new webpack.DefinePlugin({
-            'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
             'SERVER_URL': JSON.stringify(process.env.SERVER_URL),
             'process.env.NODE_ENV': JSON.stringify('development')
         }),
-        new webpack.optimize.UglifyJsPlugin(), //minify everything
         new webpack.optimize.AggressiveMergingPlugin(), //Merge chunks
-        new CopyWebpackPlugin([{ from: 'src/images/favicon.ico', to: 'favicon.ico' }])
+        new CopyWebpackPlugin([{from: 'src/assets/images/favicon.png', to: 'favicon.png'}]),
+        new CustomThemePlugin()
     ],
     devtool: 'eval',
     entry: {
@@ -27,9 +38,11 @@ module.exports = {
         ]
     },
     output: {
+        publicPath: '/',
         path: path.resolve(__dirname, './dist'),
         filename: '[name].js'
     },
+    mode: "development",
     module: {
         rules: [
             {
@@ -38,20 +51,12 @@ module.exports = {
                 loader: 'babel-loader'
             },
             {
-                test: /\.json$/,
-                loader: 'json-loader'
-            },
-            {
                 test: /\.scss|\.css$/,
                 loaders: ['style-loader', 'css-loader', 'sass-loader']
             },
             {
-                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'url-loader?limit=10000&mimetype=application/font-woff'
-            },
-            {
-                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                loader: 'file-loader'
+                test: /\.(eot|woff|woff2|svg|ttf)([\?]?.*)$/,
+                loader: 'url-loader'
             },
             {
                 test: /\.(jpe?g|png|gif|svg)$/i,
